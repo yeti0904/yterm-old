@@ -45,6 +45,7 @@ int main(void) {
 		dup2(slave, STDIN_FILENO);
 		dup2(slave, STDOUT_FILENO);
 		dup2(slave, STDERR_FILENO);
+		close(slave);
 
 		//char* shell = getenv("SHELL");
 		char* shell = "/bin/sh";
@@ -52,7 +53,6 @@ int main(void) {
 		execle(shell, shell, NULL, env);
 	}
 	else if (process > 0) { // parent
-		close(slave);
 		bool     run = true;
 		Display* display;
 		Window   window;
