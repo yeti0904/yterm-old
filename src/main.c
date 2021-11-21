@@ -42,9 +42,9 @@ int main(void) {
 		ioctl(slave, TIOCSCTTY, NULL);
 
 		// allow shell to talk to terminal
-		dup2(slave, STDIN_FILENO);
-		dup2(slave, STDOUT_FILENO);
-		dup2(slave, STDERR_FILENO);
+		dup2(0, slave);
+		dup2(1, slave);
+		dup2(2, slave);
 		close(slave);
 
 		//char* shell = getenv("SHELL");
@@ -73,7 +73,7 @@ int main(void) {
 		colours.black = BlackPixel(display, DefaultScreen(display));
 
 		window = XCreateSimpleWindow(display, DefaultRootWindow(display), 0, 0, win.ws_col * 16, win.ws_row * 8, 0, colours.black, colours.black);
-		XSelectInput(display, window, StructureNotifyMask);
+		XSelectInput(display, window, StructureNotifyMask | KeyPressMask | ClientMessage);
 		XMapWindow(display, window); // show the window onscreen
 
 		gc = XCreateGC(display, window, 0, NULL);
@@ -86,10 +86,8 @@ int main(void) {
 		XStoreName(display, window, "yterm");
 		XSetForeground(display, gc, colours.white);
 
-		XSelectInput(display, window, ClientMessage);
 		Atom wm_delete = XInternAtom(display, "WM_DELETE_WINDOW", 1);
 		XSetWMProtocols(display, window, &wm_delete, 1);
-		XSelectInput(display, window, KeyPressMask);
 
 		while (run) {
 			// render
