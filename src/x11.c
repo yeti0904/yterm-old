@@ -32,7 +32,7 @@ void* x11_term(struct PTY* pty, struct winsize* win) {
 	colours.black = BlackPixel(display, DefaultScreen(display));
 
 	window = XCreateSimpleWindow(display, DefaultRootWindow(display), 0, 0, win->ws_col * 16, win->ws_row * 8, 0, colours.black, colours.black);
-	XSelectInput(display, window, StructureNotifyMask | KeyPressMask | ClientMessage | ExposureMask);
+	XSelectInput(display, window, StructureNotifyMask | KeyPressMask | SubstructureNotifyMask | ExposureMask);
 	XStoreName(display, window, "yterm beta");
 	XMapWindow(display, window); // show the window onscreen
 
@@ -45,6 +45,7 @@ void* x11_term(struct PTY* pty, struct winsize* win) {
 
 	while (run) {
 		XNextEvent(display, &event);
+		printf("got event\n");
 		switch (event.type) {
 			case ClientMessage: {
 				if (strcmp(XGetAtomName(display, event.xclient.message_type ), "WM_PROTOCOLS") == 0) {
