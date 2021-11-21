@@ -32,28 +32,18 @@ void* x11_term(struct PTY* pty, struct winsize* win) {
 	colours.black = BlackPixel(display, DefaultScreen(display));
 
 	window = XCreateSimpleWindow(display, DefaultRootWindow(display), 0, 0, win->ws_col * 16, win->ws_row * 8, 0, colours.black, colours.black);
-	XSelectInput(display, window, StructureNotifyMask | KeyPressMask | ClientMessage);
+	XSelectInput(display, window, StructureNotifyMask | KeyPressMask | ClientMessage | ExposureMask);
+	XStoreName(display, window, "yterm beta");
 	XMapWindow(display, window); // show the window onscreen
 
 	gc = XCreateGC(display, window, 0, NULL);
 
-	while (true) { // wait for window to appear
-		XNextEvent(display, &event);
-		if (event.type == MapNotify)
-			break;
-	}
-	XStoreName(display, window, "yterm");
 	XSetForeground(display, gc, colours.white);
 
 	Atom wm_delete = XInternAtom(display, "WM_DELETE_WINDOW", 1);
 	XSetWMProtocols(display, window, &wm_delete, 1);
 
 	while (run) {
-		// render
-		XDrawString(display, window, gc, 0, 16, text.buf, strlen(text.buf));
-		XFlush(display);
-
-		// handle events
 		XNextEvent(display, &event);
 		switch (event.type) {
 			case ClientMessage: {
@@ -67,6 +57,12 @@ void* x11_term(struct PTY* pty, struct winsize* win) {
 					write(pty->slave, &event.xkey.keycode, 1);
 					printf("sent key %i '%c'\n", event.xkey.keycode, event.xkey.keycode);
 				}
+				break;
+			}
+			case Expose: {
+				// render
+				XDrawString(display, window, gc, 0, 16, text.buf, strlen(text.buf));
+				XFlush(display);
 				break;
 			}
 		}
